@@ -1,109 +1,64 @@
-let ROOT = "CSS-",
-    ID = 0,
-    REGEXP_IMPORT = /@import url\([^)]*\)(;){0,1}/,
-    REGEXP_AL = /@(\w+)([^{}]*){([^{}]+)}/g,
-    REGEXP_HOST = /:host(?:\(([^()]*)\)){0,1}/g,
-    REGEXP_RULE = /([^{}]+)({([^{}}]*)})/g,
-    REGEXP_ANIMATION = /(animation(?:\-name){0,1})(?:\s*):(?:\s*)([^\s]*)/,
-    CACHE = {};
+import { parse } from "./parse";
 
-export let options = { sheet: true };
-
-function parse(HOST, css) {
-    let indexRule = -1,
-        imports = [],
-        saveRules = {},
-        nextRules = [],
-        regExpHost = new RegExp(
-            "\\." + HOST.replace(/([^a-zA-Z]+)/g, "\\$1"),
-            "g"
-        );
-    css.replace(REGEXP_IMPORT, all => {
-        imports.push(all);
-        return "";
-    })
-        .replace(REGEXP_RULE, (all, selector, content) => {
-            indexRule++;
-            selector = selector.trim();
-            saveRules[indexRule] = prefixRule(selector, content);
-            return `<${indexRule}>`;
-        })
-        .replace(REGEXP_AL, (all, selector, option, content) => {
-            option = option.trim();
-            switch (selector) {
-                case "media":
-                    nextRules.push(
-                        `@${selector}${option}{${resolveRules(content)}}`
-                    );
-                    break;
-                case "keyframes":
-                    nextRules.push(
-                        `@${selector} ${HOST + "-" + option}{${resolveRules(
-                            content
-                        ).replace(regExpHost, "")}}`
-                    );
-                    break;
-            }
-        });
-
-    function resolveRules(content) {
-        return content.replace(/<(\d+)>/g, (all, indexRule) => {
-            let rule = saveRules[indexRule];
-            delete saveRules[indexRule];
-            return rule;
-        });
+export let options = { id: "hostcss" };
+/**
+ * It allows generating a unique id based on the given string
+ * https://github.com/cristianbote/goober/blob/master/src/core/to-hash.js
+ * @param {string} string - string to use to generate the id
+ * @return {string}
+ */
+function toHash(string) {
+    return "h0" + string.split("").reduce((out, i) => out + i.charCodeAt(0), 0);
+}
+/**
+ * allows you to read the template string if it is given as an argument
+ * @param {string} string
+ * @param {array} [args]
+ * @return {string}
+ */
+function toString(string, args) {
+    if (Array.isArray(string)) {
+        string = string
+            .map((value, index) => value + (args[index + 1] || ""))
+            .join("");
     }
-
-    function prefixRule(selector, content) {
-        return (
-            selector
-                .split(",")
-                .map(selector => {
-                    if (/:host/.test(selector)) {
-                        return selector.replace(
-                            REGEXP_HOST,
-                            (all, option) => "." + HOST + (option || "")
-                        );
-                    } else {
-                        return "." + HOST + " " + selector;
-                    }
-                })
-                .join(",") +
-            content.replace(
-                REGEXP_ANIMATION,
-                (all, property, name) => `${property}:${HOST}-${name}`
-            )
-        );
+    return string.replace(/\n/g, "");
+}
+/**
+ * prints the stylo in the document, if options.capture, it is defined as
+ * array, the use of the document will be avoided, inserting all the generated css into capture.
+ * @param {string} id  -
+ * @param {string} rules -
+ */
+function insertRules(id, rules) {
+    if (!options.capture) {
+        let style = document.getElementById(options.id);
+        if (!style) {
+            style = document.createElement("style");
+            style.innerHTML = " ";
+            style.id = options.id;
+            document.head.appendChild(style);
+        }
+        let child = style.firstChild;
+        if (child.data.indexOf(id) == -1) child.data += rules;
+    } else {
+        options.capture.push(rules);
     }
-    for (let key in saveRules) nextRules.unshift(saveRules[key]);
-    return imports.concat(nextRules);
 }
 
-export function css(string, ...args) {
-    string = string.map((str, index) => str + (args[index] || "")).join("");
+export function css(string) {
+    string = toString(string, arguments);
 
-    let doc = options.document || document;
+    let id = toHash(string);
 
-    if (CACHE[string]) return CACHE[string];
+    insertRules(id, parse("." + id, string).join(""));
 
-    let HOST = ROOT + ID++;
+    return id;
+}
 
-    let rules = parse(HOST, string);
-
-    let style = doc.querySelector("#" + HOST);
-
-    if (!style) {
-        style = doc.createElement("style");
-        doc.head.appendChild(style);
-        style.id = HOST;
-    }
-    if (options.sheet) {
-        rules.map((rule, index) => {
-            style.sheet.insertRule(rule, index);
-        });
-    } else {
-        style.innerHTML = rules.join("\n");
-    }
-
-    return (CACHE[string] = HOST);
+export function keyframes(string) {
+    string = toString(string, arguments);
+    let id = toHash(string);
+    insertRules(id, `@keyframes ${id}{${string}}`);
+    return id;
 }

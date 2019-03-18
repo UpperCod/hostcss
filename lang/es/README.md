@@ -1,21 +1,13 @@
 # @atomico/hostcss
 
-permite mantener la sintaxis de css del shadowDom fuera del el y dentro del js, con la intención de escribir css mantenible tanto para el shadowDom como fuera de el.
-
+Permite encapsular el css bajo un nombre de clase único, logrando un comportamiento similar a [styled-component](https://github.com/styled-components/styled-components), pero con un menor tamaño.
 
 ```js
-import {css} from "@atomico/hostcss";
+import { css } from "@atomico/hostcss";
 
 let className = css`
-    :host{
-        width:100%;
-        height:100%;
-        animation: pulso 1s ease alternate infinite;
-    }
-    @keyframes{
-        0%{background:teal}
-        100%{background:black}
-    }
+    width: 100%;
+    height: 100%;
 `;
 
 document.querySelector("button").className = className;
@@ -23,15 +15,57 @@ document.querySelector("button").className = className;
 
 > la función `css` siempre retornara un nombre de clase único dentro de `@atomico/hostcss`
 
-## Obervaciones importantes
+## nesting
 
-### blindeo de keyframes
+el soporte de anidamiento es básico, siga el siguiente ejemplo para componer por anidación de estilos, recuerde usar siempre el prefijo `&`
 
-los keyframes posee un contexto solo dentro de la clase generada.
+```js
+css`
+    & button {
+        & span {
+            font-size: 30px;
+        }
+        & i {
+            font-size: 50px;
+            &:hover {
+                background: red;
+            }
+        }
+    }
+`;
+```
 
-### reglas simples
+## mediaquery
 
-Esta herramienta no busca ser un compilador complejo de css, ya que esta pensado para funcionar de forma simple en el navegador, su reducido tamaño se debe al uso de expresiones regulares, que pueden romperse con cierto selectores, ejemplo selectores por atributo que involucren caracteres asociativos a una regla css.
+El formato de nesting tambien aplica a los mediaquery.
+
+```js
+css`
+    & button {
+        & i {
+            font-size: 50px;
+            @media (max-width: 320px) {
+                font-size: 30px;
+            }
+        }
+    }
+`;
+```
+
+## keyframes
+
+Keyframes retorna un id unico para la animacion
+
+```js
+import { keyframes, css } from "@atomico/hostcss";
+
+let animation = keyframes`
+    0%{background:transparent}
+    100%{background:crimson}
+`;
+
+let button = `animation: ${animation} 1s ease alternate infinite;`;
+```
 
 ### resalte la sintaxis
 
