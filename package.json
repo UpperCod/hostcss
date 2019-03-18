@@ -1,7 +1,7 @@
 {
   "name": "@atomico/hostcss",
   "description": "css-in-js, small and minimalist",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "main": "dist/atomico-hostcss.js",
   "module": "dist/atomico-hostcss.mjs",
   "umd:main": "dist/atomico-hostcss.umd.js",
@@ -19,7 +19,7 @@
     "test": "jest",
     "build": "rollup -c",
     "watch": "rollup -c -w",
-    "prepare": "npm run build"
+    "prepare": "npm run build && npm run build"
   },
   "devDependencies": {
     "@atomico/core": ">=1.2.4",
