@@ -18,10 +18,11 @@ export function parse(host, css) {
         let nextCss = css.replace(REG_NEST, (all, type, selector, content) => {
             let index = ID++;
             memo[index] = [type, selector, content];
-            return "@" + index;
+            return "$" + index;
         });
         if (nextCss !== css);
-        return nextCss != css ? nesting(nextCss) : nextCss;
+
+        return nextCss != css ? nesting(nextCss) : css;
     }
     /**
      * @param {string} host  - concurrent parent selector of nesting
@@ -29,11 +30,14 @@ export function parse(host, css) {
      * @param {array} rules  - list of rules
      */
     function join(host, css, rules = []) {
-        return css.replace(/@(\d+)/g, (all, id) => {
+        return css.replace(/\$(\d+)/g, (all, id) => {
             let [type, selector, content] = memo[id];
             if (type == "&") {
                 selector = host + selector;
-                rules.unshift(selector + join(selector, content, rules));
+                content = join(selector, content, rules);
+                if (content.replace(/[{}\s\n]*/g, "")) {
+                    rules.unshift(selector + content);
+                }
             }
             if (type == "@" && /^media/.test(selector)) {
                 let subRules = [];

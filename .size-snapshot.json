@@ -1,18 +1,18 @@
 {
   "dist/atomico-hostcss.js": {
-    "bundled": 1619,
-    "minified": 1615,
-    "gzipped": 833
+    "bundled": 1648,
+    "minified": 1644,
+    "gzipped": 852
   },
   "dist/atomico-hostcss.umd.js": {
-    "bundled": 1628,
-    "minified": 1624,
-    "gzipped": 883
+    "bundled": 1657,
+    "minified": 1653,
+    "gzipped": 902
   },
   "dist/atomico-hostcss.mjs": {
-    "bundled": 1386,
-    "minified": 1382,
-    "gzipped": 755,
+    "bundled": 1415,
+    "minified": 1411,
+    "gzipped": 777,
     "treeshaked": {
       "rollup": {
         "code": 0,
