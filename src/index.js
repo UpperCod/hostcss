@@ -53,7 +53,26 @@ export function css(string) {
 
     insertRules(id, parse("." + id, string).join(""));
 
-    return id;
+    function className(states) {
+        let string = id;
+        for (let key in states) {
+            if (states[key]) {
+                string += ` ${id}--${key.replace(
+                    /(\w)([A-Z])/g,
+                    (all, a, b) => {
+                        return `${a}-${b.toLowerCase()}`;
+                    }
+                )}`;
+            }
+        }
+        return string;
+    }
+
+    className.toString = () => id;
+
+    className.id = id;
+
+    return className;
 }
 
 export function keyframes(string) {
