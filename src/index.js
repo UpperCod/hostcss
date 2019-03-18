@@ -68,7 +68,7 @@ export function css(string) {
         return string;
     }
 
-    className.toString = () => id;
+    className.toString = className;
 
     className.id = id;
 

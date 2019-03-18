@@ -1,7 +1,7 @@
 {
   "name": "@atomico/hostcss",
   "description": "css-in-js, small and minimalist",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "dist/atomico-hostcss.js",
   "module": "dist/atomico-hostcss.mjs",
   "umd:main": "dist/atomico-hostcss.umd.js",
