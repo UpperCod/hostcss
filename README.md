@@ -72,6 +72,33 @@ let animation = keyframes`
 let button = `animation: ${animation} 1s ease alternate infinite;`;
 ```
 
+
+## states
+
+the states are simply name extensions for className host, you can create them using the return of `css` as a function.
+
+```jsx
+let className = css`
+&--checked{
+    background:teal;
+    &:hover{color:white;}
+}
+&--active{
+    background:black;
+    &:hover{color:yellow}
+}
+`
+
+document.querySelector("button").className = className({
+    checked: 1,
+    active:0
+}) // <hash> <hash>--checked
+```
+
+## server render
+
+You can capture all the generated css by defining `options.capture = []`, then you can print it inline in your html document, remember to keep the hostcss interaction on the className, you must name your inline tag in the following way `<style id="hostcss">/**inline-css**/</style>`
+
 ### highlight the syntax
 
 You can facilitate the reading of your CSS in js using the plugin [vscode-styled-components](https://marketplace.visualstudio.com/items?itemName=jpoissonnier.vscode-styled-components), this allows you to highlight the syntax and autocomplete properties.

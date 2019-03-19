@@ -67,6 +67,32 @@ let animation = keyframes`
 let button = `animation: ${animation} 1s ease alternate infinite;`;
 ```
 
+## Estados
+
+los estados son simplemente extensiones de nombre para className host, ud puede crearlos usando el retorno de `css` como función. 
+
+```jsx
+let className = css`
+&--checked{
+    background:teal;
+    &:hover{color:white;}
+}
+&--active{
+    background:black;
+    &:hover{color:yellow}
+}
+`
+
+document.querySelector("button").className = className({
+    checked: 1,
+    active:0
+}) // <hash> <hash>--checked
+```
+
+## server render
+
+Ud puede capturar todo el css generado definiendo `options.capture=[]`, pudiendo luego imprimirlo inline en su documento html, recuerde para mantener la interacción de hostcss sobre el className, debe nombrar su etiqueta inline de la siguiente forma `<style id="hostcss">/**inline-css**/</style>`.
+
 ### resalte la sintaxis
 
-ud puede facilitar la lectura de su css en js mediante el plugin [vscode-styled-components](https://marketplace.visualstudio.com/items?itemName=jpoissonnier.vscode-styled-components), este permite resaltar la sintaxis y autocompletar  propiedades.
+para facilitar la lectura de su css en js mediante el plugin [vscode-styled-components](https://marketplace.visualstudio.com/items?itemName=jpoissonnier.vscode-styled-components), este permite resaltar la sintaxis y autocompletar  propiedades.
