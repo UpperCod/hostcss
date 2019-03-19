@@ -1,4 +1,4 @@
-import { parse } from "./parse";
+import { parse, replace } from "./parse";
 
 export let options = { id: "hostcss" };
 /**
@@ -8,7 +8,7 @@ export let options = { id: "hostcss" };
  * @return {string}
  */
 function toHash(string) {
-    return "h0" + string.split("").reduce((out, i) => out + i.charCodeAt(0), 0);
+    return "H0" + string.split("").reduce((out, i) => out + i.charCodeAt(0), 0);
 }
 /**
  * allows you to read the template string if it is given as an argument
@@ -22,7 +22,11 @@ function toString(string, args) {
             .map((value, index) => value + (args[index + 1] || ""))
             .join("");
     }
-    return string.replace(/\n/g, "");
+    // Remove the blanks
+    string = replace(string, /\n/g, "");
+    string = replace(string, /;\s+/g, ";");
+    string = replace(string, /\{\s+/g, "{");
+    return replace(string, /\s+\}/g, "}");
 }
 /**
  * prints the stylo in the document, if options.capture, it is defined as
@@ -49,7 +53,18 @@ function insertRules(id, rules) {
 export function css(string) {
     string = toString(string, arguments);
 
-    let id = toHash(string);
+    let id;
+
+    string = replace(
+        string,
+        /\/(\*){1,}(\s*)@host(\s+)([\w]+)(\s*)(\*){1,}\//,
+        (all, a, b, c, d) => {
+            id = d;
+            return "";
+        }
+    );
+
+    id = id || toHash(string);
 
     insertRules(id, parse("." + id, string).join(""));
 
@@ -57,12 +72,7 @@ export function css(string) {
         let string = id;
         for (let key in states) {
             if (states[key]) {
-                string += ` ${id}--${key.replace(
-                    /(\w)([A-Z])/g,
-                    (all, a, b) => {
-                        return `${a}-${b.toLowerCase()}`;
-                    }
-                )}`;
+                string += ` ${id}--${key}`;
             }
         }
         return string;

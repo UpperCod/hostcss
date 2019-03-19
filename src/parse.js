@@ -1,4 +1,8 @@
 const REG_NEST = /(&|@)([^{}]+)({([^{}]*)})/g;
+
+export function replace(string, pattern, map) {
+    return string.replace(pattern, map);
+}
 /**
  *
  * @param {*} host
@@ -15,7 +19,7 @@ export function parse(host, css) {
      * @param {string} css
      */
     function nesting(css) {
-        let nextCss = css.replace(REG_NEST, (all, type, selector, content) => {
+        let nextCss = replace(css, REG_NEST, (all, type, selector, content) => {
             let index = ID++;
             memo[index] = [type, selector, content];
             return "$" + index;
@@ -30,12 +34,12 @@ export function parse(host, css) {
      * @param {array} rules  - list of rules
      */
     function join(host, css, rules = []) {
-        return css.replace(/\$(\d+)/g, (all, id) => {
+        return replace(css, /\$(\d+)/g, (all, id) => {
             let [type, selector, content] = memo[id];
             if (type == "&") {
                 selector = host + selector;
                 content = join(selector, content, rules);
-                if (content.replace(/[{}\s\n]*/g, "")) {
+                if (replace(content, /[{}\s\n]*/g, "")) {
                     rules.unshift(selector + content);
                 }
             }
@@ -50,7 +54,7 @@ export function parse(host, css) {
     /**
      * Clean the used imports within the CSS, before defining the rules
      */
-    css = css.replace(/@import url\([^()]+\)(;){0,1}/g, all => {
+    css = replace(css, /@import url\([^()]+\)(;){0,1}/g, all => {
         imps.push(all);
         return "";
     });
