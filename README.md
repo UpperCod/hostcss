@@ -102,3 +102,9 @@ You can capture all the generated css by defining `options.capture = []`, then y
 ### highlight the syntax
 
 You can facilitate the reading of your CSS in js using the plugin [vscode-styled-components](https://marketplace.visualstudio.com/items?itemName=jpoissonnier.vscode-styled-components), this allows you to highlight the syntax and autocomplete properties.
+
+## Examples
+
+| Title | Link | 
+|--------|------|
+| Atomico + Hostcss + Parcel | [https://codesandbox.io/s/pjxxx6lm3m](https://codesandbox.io/s/pjxxx6lm3m)|
