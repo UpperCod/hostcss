@@ -106,5 +106,5 @@ You can facilitate the reading of your CSS in js using the plugin [vscode-styled
 ## Examples
 
 | Title | Link | 
-|--------|------|
+|:------|:-----|
 | Atomico + Hostcss + Parcel | [https://codesandbox.io/s/pjxxx6lm3m](https://codesandbox.io/s/pjxxx6lm3m)|
