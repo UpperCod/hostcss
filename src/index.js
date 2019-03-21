@@ -1,6 +1,8 @@
 import { parse, replace } from "./parse";
 
-export let options = { id: "hostcss" };
+export let options = {};
+
+let defer = Promise.resolve();
 /**
  * It allows generating a unique id based on the given string
  * https://github.com/cristianbote/goober/blob/master/src/core/to-hash.js
@@ -22,10 +24,12 @@ function toString(string, args) {
             .map((value, index) => value + (args[index + 1] || ""))
             .join("");
     }
-    // Remove the blanks
+    // minimal compression
     string = replace(string, /\n/g, "");
+    string = replace(string, /:\s+/g, ":");
+    string = replace(string, /\s+/g, " ");
     string = replace(string, /;\s+/g, ";");
-    string = replace(string, /\{\s+/g, "{");
+    string = replace(string, /\s*\{\s+/g, "{");
     return replace(string, /\s+\}/g, "}");
 }
 /**
@@ -35,19 +39,32 @@ function toString(string, args) {
  * @param {string} rules -
  */
 function insertRules(id, rules) {
-    if (!options.capture) {
-        let style = document.getElementById(options.id);
-        if (!style) {
-            style = document.createElement("style");
-            style.innerHTML = " ";
-            style.id = options.id;
-            document.head.appendChild(style);
+    let resolve = () => {
+        if (!options.capture) {
+            let style = document.querySelector("style#" + id);
+            if (!style) {
+                style = document.createElement("style");
+                style.innerHTML = " ";
+                style.id = id;
+                document.head.appendChild(style);
+            }
+            if (options.inline) {
+                let child = style.firstChild;
+                rules = rules.join("");
+                if (child.data.indexOf(id) == -1) child.data += rules;
+            } else {
+                let length = rules.length;
+                for (let i = 0; i < length; i++)
+                    style.sheet.insertRule(rules[i], i);
+            }
+        } else {
+            options.capture.push([id, rules.join("")]);
         }
-        let child = style.firstChild;
-        if (child.data.indexOf(id) == -1) child.data += rules;
-    } else {
-        options.capture.push(rules);
-    }
+    };
+    // to accelerate the process of rendering the css, the impression is associated
+    // to a promise, allowing with this to capture blocking errors to the
+    // use style.sheet
+    options.capture ? resolve() : defer.then(resolve);
 }
 
 export function css(string) {
@@ -66,7 +83,7 @@ export function css(string) {
 
     id = id || toHash(string);
 
-    insertRules(id, parse("." + id, string).join(""));
+    insertRules(id, parse("." + id, string));
 
     function className(states) {
         let string = id;
@@ -88,6 +105,6 @@ export function css(string) {
 export function keyframes(string) {
     string = toString(string, arguments);
     let id = toHash(string);
-    insertRules(id, `@keyframes ${id}{${string}}`);
+    insertRules(id, [`@keyframes ${id}{${string}}`]);
     return id;
 }
