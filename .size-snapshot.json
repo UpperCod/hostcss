@@ -1,25 +1,49 @@
 {
   "dist/atomico-hostcss.js": {
-    "bundled": 2007,
-    "minified": 2003,
-    "gzipped": 1004
+    "bundled": 2347,
+    "minified": 2347,
+    "gzipped": 1196
   },
   "dist/atomico-hostcss.umd.js": {
-    "bundled": 1926,
-    "minified": 1926,
-    "gzipped": 1044
+    "bundled": 2290,
+    "minified": 2290,
+    "gzipped": 1223
   },
   "dist/atomico-hostcss.mjs": {
-    "bundled": 1684,
-    "minified": 1684,
-    "gzipped": 919,
+    "bundled": 2016,
+    "minified": 2016,
+    "gzipped": 1102,
     "treeshaked": {
       "rollup": {
-        "code": 0,
-        "import_statements": 0
+        "code": 22,
+        "import_statements": 22
       },
       "webpack": {
-        "code": 969
+        "code": 2508
+      }
+    }
+  },
+  "preact.js": {
+    "bundled": 2033,
+    "minified": 2033,
+    "gzipped": 1072
+  },
+  "preact.umd.js": {
+    "bundled": 1996,
+    "minified": 1992,
+    "gzipped": 1069
+  },
+  "preact.mjs": {
+    "bundled": 1792,
+    "minified": 1788,
+    "gzipped": 987,
+    "treeshaked": {
+      "rollup": {
+        "code": 15,
+        "import_statements": 15
+      },
+      "webpack": {
+        "code": 2168
       }
     }
   }
