@@ -1,64 +1,85 @@
-const REG_NEST = /(&|@)([^{}]+)({([^{}]*)})/g;
+import cssToObject from "./cssToObject";
+import { hash } from "./utils";
 
-export function replace(string, pattern, map) {
-    return string.replace(pattern, map);
+let alImport = "@import";
+
+export function objectToCss(
+	tree,
+	host,
+	parent = [""],
+	rules = [],
+	states = {},
+	vars = {},
+	deep = 0
+) {
+	let scope = "";
+	if (tree[alImport]) {
+		[].concat(tree[alImport]).forEach(value => {
+			rules.push(`${alImport} ${value};`);
+		});
+	}
+	for (let property in tree) {
+		if (property == alImport) continue;
+
+		let value = tree[property];
+		if (typeof value == "object") {
+			let isState = deep == 1 && /&\.is-(\w+)/.exec(property),
+				alRules = [],
+				isAl = property[0] == "@",
+				next = parent.reduce(
+					(next, parent) =>
+						next.concat(
+							isAl
+								? [parent]
+								: property
+										.split(/ *, */)
+										.map(selector =>
+											parent
+												? parent +
+												  (selector[0] == "&"
+														? selector.slice(1)
+														: " " + selector)
+												: selector
+										)
+						),
+					[]
+				);
+			objectToCss(
+				value,
+				host,
+				next,
+				isAl ? alRules : rules,
+				states,
+				vars,
+				parent ? (isState ? 1 : deep + 1) : 0
+			);
+			if (isAl) {
+				rules.push(`${property}{${alRules}}`);
+			}
+			if (isState) {
+				states[isState[1]] = 1;
+			}
+		} else {
+			scope += `${property}:${value.replace(
+				/var\( *--([\w\-]+) *(,|\))/g,
+				(all, name, end) => {
+					vars[
+						name.replace(/-(\w)/g, (all, letter) => letter.toUpperCase())
+					] = name;
+					return `var(--${name + end}`;
+				}
+			)};`;
+		}
+	}
+
+	if (scope) rules.push(`${parent}{${scope}}`);
+	return [rules, states, vars];
 }
-/**
- *
- * @param {*} host
- * @param {*} css
- */
-export function parse(host, css) {
-    let rules = [],
-        imps = [],
-        memo = {},
-        ID = 0;
-    /**
-     * capture nested rules for later
-     * unite them without nesting
-     * @param {string} css
-     */
-    function nesting(css) {
-        let nextCss = replace(css, REG_NEST, (all, type, selector, content) => {
-            let index = ID++;
-            memo[index] = [type, selector, content];
-            return "$" + index;
-        });
-        if (nextCss !== css);
 
-        return nextCss != css ? nesting(nextCss) : css;
-    }
-    /**
-     * @param {string} host  - concurrent parent selector of nesting
-     * @param {string} css - remaining CSS string
-     * @param {array} rules  - list of rules
-     */
-    function join(host, css, rules = []) {
-        return replace(css, /\$(\d+)/g, (all, id) => {
-            let [type, selector, content] = memo[id];
-            if (type == "&") {
-                selector = host + selector;
-                content = join(selector, content, rules);
-                if (replace(content, /[{}\s\n]*/g, "")) {
-                    rules.unshift(selector + content);
-                }
-            }
-            if (type == "@" && /^media/.test(selector)) {
-                let subRules = [];
-                subRules.unshift(host + join(host, content, subRules));
-                rules.push(`@${selector}{${subRules.join("")}}`);
-            }
-            return "";
-        });
-    }
-    /**
-     * Clean the used imports within the CSS, before defining the rules
-     */
-    css = replace(css, /@import url\([^()]+\)(;){0,1}/g, all => {
-        imps.push(all);
-        return "";
-    });
-    let scope = join(host, nesting(css), rules).trim();
-    if (scope) rules.unshift(`${host}{${scope}}`);
-    return imps.concat(rules);
+export default function parse(string) {
+	let host = hash(string),
+		selector = "." + host;
+	return [host].concat(
+		objectToCss({ ["." + host]: cssToObject(string) }, selector)
+	);
 }
