@@ -1,85 +1,94 @@
-import cssToObject from "./cssToObject";
-import { hash } from "./utils";
+import { replace, hash, toCamelCase, clearCss } from "./utils";
 
-let alImport = "@import";
+let REG_NEST = /([^{};]+)({([^{}]*)})/g;
+let REG_VARS = /var\( *--([\w\-]+) *(,|\))/g;
+let REG_IMPORTS = /@import url\([^()]+\)(;){0,1}/g;
 
-export function objectToCss(
-	tree,
-	host,
-	parent = [""],
-	rules = [],
-	states = {},
-	vars = {},
-	deep = 0
-) {
-	let scope = "";
-	if (tree[alImport]) {
-		[].concat(tree[alImport]).forEach(value => {
-			rules.push(`${alImport} ${value};`);
+/**
+ * @param {string} host - host class selector
+ * @param {*} css
+ */
+export default function parse(css) {
+	let rules = [],
+		before = [],
+		after = [],
+		brackets = {},
+		states = {},
+		vars = {},
+		position = 0;
+
+	/**
+	 * capture nested rules for later
+	 * unite them without nesting
+	 * @param {string} css
+	 */
+	function nesting(css) {
+		let nextCss = replace(css, REG_NEST, (all, selector, content) => {
+			let index = position++;
+			brackets[index] = [selector, content];
+			return "$" + index;
+		});
+
+		return nextCss != css ? nesting(nextCss) : css;
+	}
+	/**
+	 * unites the rules, generating the nesting css
+	 * @param {string} host  - concurrent parent selector of nesting
+	 * @param {string} css - remaining CSS string
+	 * @param {array} rules  - list of rules
+	 * @return {string} returns the css already nested
+	 */
+	function join(host, css, rules = []) {
+		return replace(css, /\$(\d+)/g, (all, position) => {
+			let [selector, content] = brackets[position];
+			if (selector[0] == "@") {
+				let subRules = [];
+				subRules.unshift(host + join(host, content, subRules));
+				after.push(`${selector}{${subRules.join("")}}`);
+			} else {
+				let selectors = [];
+				for (let i = 0; i < host.length; i++) {
+					let items = selector.split(/ *, */);
+					for (let c = 0; c < items.length; c++) {
+						if (items[c][0] == "&") {
+							selectors.push(replace(items[c], /&(.+)/g, host[i] + "$1"));
+						}
+					}
+				}
+				content = join(selectors, content, rules);
+				if (replace(content, /[{} ]*/g, "")) {
+					rules.push(selectors + content);
+				}
+			}
+			return "";
 		});
 	}
-	for (let property in tree) {
-		if (property == alImport) continue;
 
-		let value = tree[property];
-		if (typeof value == "object") {
-			let isState = deep == 1 && /&\.is-(\w+)/.exec(property),
-				alRules = [],
-				isAl = property[0] == "@",
-				next = parent.reduce(
-					(next, parent) =>
-						next.concat(
-							isAl
-								? [parent]
-								: property
-										.split(/ *, */)
-										.map(selector =>
-											parent
-												? parent +
-												  (selector[0] == "&"
-														? selector.slice(1)
-														: " " + selector)
-												: selector
-										)
-						),
-					[]
-				);
-			objectToCss(
-				value,
-				host,
-				next,
-				isAl ? alRules : rules,
-				states,
-				vars,
-				parent ? (isState ? 1 : deep + 1) : 0
-			);
-			if (isAl) {
-				rules.push(`${property}{${alRules}}`);
-			}
-			if (isState) {
-				states[isState[1]] = 1;
-			}
-		} else {
-			scope += `${property}:${value.replace(
-				/var\( *--([\w\-]+) *(,|\))/g,
-				(all, name, end) => {
-					vars[
-						name.replace(/-(\w)/g, (all, letter) => letter.toUpperCase())
-					] = name;
-					return `var(--${name + end}`;
-				}
-			)};`;
-		}
-	}
+	css = clearCss(css);
 
-	if (scope) rules.push(`${parent}{${scope}}`);
-	return [rules, states, vars];
-}
+	let host = hash(css);
 
-export default function parse(string) {
-	let host = hash(string),
-		selector = "." + host;
-	return [host].concat(
-		objectToCss({ ["." + host]: cssToObject(string) }, selector)
-	);
+	replace(css, REG_VARS, (all, name, end) => {
+		vars[toCamelCase(name)] = name;
+	});
+
+	replace(css, /\.is-([\w\-]+)/g, (all, name, end) => {
+		states[toCamelCase(name)] = name;
+	});
+	/**
+	 * Clean the used imports within the CSS, before defining the rules
+	 */
+	css = replace(css, REG_IMPORTS, all => {
+		before.push(all);
+		return "";
+	});
+	let className = "." + host,
+		scope = join([className], nesting(css), rules);
+	if (scope) before.push(`${className}{${scope}}`);
+	return {
+		host,
+		vars,
+		states,
+		rules: [].concat(before, rules, after)
+	};
 }

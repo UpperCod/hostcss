@@ -7,9 +7,7 @@ export default function createStyled(pragma) {
 		return function css(values) {
 			let string = join(values, arguments);
 
-			let [host, rules, states, vars] = parse(string);
-
-			rules.reverse();
+			let { host, rules, states, vars } = parse(string);
 
 			insertStyle(host, rules);
 
