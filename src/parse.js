@@ -5,10 +5,16 @@ let REG_VARS = /var\( *--([\w\-]+) *(,|\))/g;
 let REG_IMPORTS = /@import url\([^()]+\)(;){0,1}/g;
 
 /**
- * @param {string} host - host class selector
- * @param {*} css
+ * @typedef {Object<string,string>} Keyes
  */
-export default function parse(css) {
+
+/**
+ * @todo
+ * @param {string} css
+ * @param {string} [host]
+ * @returns {{host:string,vars:Keyes,states:Keyes,rules:string[]}}
+ */
+export default function parse(css, host) {
 	let rules = [],
 		before = [],
 		after = [],
@@ -57,7 +63,7 @@ export default function parse(css) {
 				}
 				content = join(selectors, content, rules);
 				if (replace(content, /[{} ]*/g, "")) {
-					rules.push(selectors + content);
+					rules.unshift(selectors + content);
 				}
 			}
 			return "";
@@ -66,7 +72,7 @@ export default function parse(css) {
 
 	css = clearCss(css);
 
-	let host = hash(css);
+	host = host || hash(css);
 
 	replace(css, REG_VARS, (all, name, end) => {
 		vars[toCamelCase(name)] = name;

@@ -8,7 +8,7 @@ export function hash(string) {
 	return "H0" + id; //.toString(32);
 }
 export function toCamelCase(value) {
-	return value.replace(/-(\w)/g, (all, letter) => letter.toUpperCase());
+	return replace(value, /-(\w)/g, (all, letter) => letter.toUpperCase());
 }
 
 export function replace(string, pattern, map) {
@@ -16,5 +16,6 @@ export function replace(string, pattern, map) {
 }
 
 export function clearCss(css) {
-	return css.replace(/\/\*.*?\*\/|\s{2,}|\n/gm, "");
+	css = replace(css, /\/\*.*?\*\/|\s{2,}|\n/gm, "");
+	return replace(css, / *(:|{) */g, "$1");
 }
