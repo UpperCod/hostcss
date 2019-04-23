@@ -4,6 +4,7 @@ import { join } from "./utils";
 
 export default function createStyled(pragma) {
 	return function styled(type) {
+		let isFunction = typeof type == "function";
 		return function css(values) {
 			let string = join(values, arguments);
 
@@ -11,7 +12,7 @@ export default function createStyled(pragma) {
 
 			insertStyle(host, rules);
 
-			function component(props) {
+			function createPropsHost(props) {
 				let nextProps = {},
 					style = {},
 					className = host;
@@ -27,7 +28,13 @@ export default function createStyled(pragma) {
 				}
 				nextProps.style = style;
 				nextProps.className = className;
-				return pragma(type, nextProps);
+				return nextProps;
+			}
+
+			function component(props) {
+				return isFunction
+					? type(props, createPropsHost)
+					: pragma(type, createPropsHost(props));
 			}
 
 			component.host = host;

@@ -7,6 +7,7 @@ export default function insertStyle(host, rules) {
 		style = document.createElement("style");
 		style.id = host;
 		style.innerHTML = " ";
+		style.dataset.hostcss = "";
 		document.head.appendChild(style);
 	}
 
