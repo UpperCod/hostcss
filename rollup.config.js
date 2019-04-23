@@ -38,26 +38,26 @@ export default [
 		],
 		plugins
 	},
-	{
-		input: "src/preact/index.js",
+	...["atomico", "react", "preact"].map(name => ({
+		input: `src/${name}/index.js`,
 		output: [
 			{
-				file: "preact.js",
+				file: name + ".js",
 				sourcemap: true,
 				format: "cjs"
 			},
 			{
-				file: "preact.umd.js",
+				file: name + ".umd.js",
 				sourcemap: true,
 				format: "umd",
-				name: "hostcss-preact"
+				name: "hostcss-" + name
 			},
 			{
-				file: "preact.mjs",
+				file: name + ".mjs",
 				sourcemap: true,
 				format: "es"
 			}
 		],
 		plugins
-	}
+	}))
 ];
