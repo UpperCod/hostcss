@@ -1,10 +1,9 @@
 {
 	"name": "hostcss",
 	"description": "css-in-js, small and minimalist",
-	"version": "0.0.1",
-	"main": "dist/hostcss.js",
-	"module": "dist/hostcss.mjs",
-	"unpkg": "dist/hostcss.umd.js",
+	"version": "0.1.0",
+	"main": "module.js",
+	"module": "module.js",
 	"source": "src/index.js",
 	"author": "Matias Trujillo Olivares",
 	"license": "ISC",
@@ -40,10 +39,7 @@
 		"react": "^16.8.6",
 		"react-dom": "^16.8.6",
 		"regenerator-runtime": "^0.13.1",
-		"rollup": "^1.1.2",
-		"rollup-plugin-buble": "^0.19.6",
-		"rollup-plugin-size-snapshot": "^0.8.0",
-		"rollup-plugin-terser": "^4.0.3"
+		"rollup": "^1.1.2"
 	},
 	"babel": {
 		"presets": [
