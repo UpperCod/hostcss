@@ -1,3 +1,4 @@
+import { createStyled } from "../index";
+export { keyframes, options } from "../index";
 import { h } from "preact";
-import createStyled from "../createStyled";
 export default createStyled(h);
